@@ -1,0 +1,200 @@
+---
+driver:
+  name: vagrant
+  synced_folders:
+      - ['test', '/backups', 'create: true', owner: "root", group: "root"]
+  customize:
+    memory: 2048
+    cpus: 2
+  network:
+    - ["private_network", {ip: "192.168.33.22"}]
+
+provisioner:
+  name: chef_zero
+  always_update_cookbooks: true
+  chef_license: accept
+  product_name: chef
+  product_version: 16
+
+verifier:
+  name: inspec
+  color: false
+
+platforms:
+  - name: centos-7
+  - name: ubuntu-18.04
+
+suites:
+  - name: 15default
+    provisioner:
+      product_version: 15
+    attributes:
+      chef-server:
+        package_source: /backups/chef-server-core-12.19.31-1.el7.x86_64.rpm
+    verifier:
+      inspec_tests:
+        - test/integration/default
+    excludes: ["ubuntu-18.04"]
+  - name: 16default
+    verifier:
+      inspec_tests:
+        - test/integration/default
+  - name: 16backup
+    provisioner:
+      named_run_list: backup
+    attributes:
+      mcs:
+        skip_test: true
+    verifier:
+      inspec_tests:
+        - test/integration/default
+        - test/integration/backup
+    excludes: ["ubuntu-18.04"]
+  - name: 16cron
+    provisioner:
+      named_run_list: cron
+    attributes:
+      mcs:
+        managed:
+          dir: /root/managed
+        skip_test: true
+    verifier:
+      inspec_tests:
+        - test/integration/cron
+    excludes: ["ubuntu-18.04"]
+  - name: 16data_bags
+    provisioner:
+      named_run_list: data_bags
+    attributes:
+      mcs:
+        skip_test: true
+    verifier:
+      inspec_tests:
+        - test/integration/default
+        - test/integration/data_bags
+    excludes: ["ubuntu-18.04"]
+  - name: 16data_collector
+    provisioner:
+      named_run_list: data_collector
+    attributes:
+      mcs:
+        skip_test: true
+    verifier:
+      inspec_tests:
+        - test/integration/default
+        - test/integration/data_collector
+    excludes: ["ubuntu-18.04"]
+  - name: 16legacy
+    provisioner:
+      named_run_list: legacy
+    attributes:
+      mcs:
+        skip_test: true
+    verifier:
+      inspec_tests:
+        - test/integration/default
+        - test/integration/legacy
+    excludes: ["ubuntu-18.04"]
+  - name: 16policyfile
+    provisioner:
+      named_run_list: policyfile
+    attributes:
+      mcs:
+        skip_test: true
+    verifier:
+      inspec_tests:
+        - test/integration/default
+        - test/integration/policyfiles
+    excludes: ["ubuntu-18.04"]
+  - name: 15restore
+    provisioner:
+      named_run_list: restore
+      product_version: 15
+    attributes:
+      chef-server:
+        package_source: /backups/chef-server-core-12.19.31-1.el7.x86_64.rpm
+    verifier:
+      inspec_tests:
+        - test/integration/default
+        - test/integration/data_bags
+        - test/integration/policyfiles
+        - test/integration/restore
+    excludes: ["ubuntu-18.04"]
+  - name: 16restore
+    provisioner:
+      named_run_list: restore
+    verifier:
+      inspec_tests:
+        - test/integration/default
+        - test/integration/data_bags
+        - test/integration/policyfiles
+        - test/integration/restore
+    excludes: ["ubuntu-18.04"]
+  - name: 15upgrade
+    provisioner:
+      named_run_list: upgrade
+      product_version: 15
+    attributes:
+      chef-server:
+        package_source: /backups/chef-server-core-12.19.31-1.el7.x86_64.rpm
+      mcs:
+        upgrade:
+          package_source: /backups/chef-server-core-13.2.0-1.el7.x86_64.rpm
+    verifier:
+      inspec_tests:
+        - test/integration/default
+        - test/integration/upgrade
+    excludes: ["ubuntu-18.04"]
+  - name: 16upgrade
+    provisioner:
+      named_run_list: upgrade
+    attributes:
+      chef-server:
+        package_source: /backups/chef-server-core-13.1.13-1.el7.x86_64.rpm
+      mcs:
+        upgrade:
+          package_source: /backups/chef-server-core-13.2.0-1.el7.x86_64.rpm
+    verifier:
+      inspec_tests:
+        - test/integration/default
+        - test/integration/upgrade
+    excludes: ["ubuntu-18.04"]
+  - name: 15everything
+    provisioner:
+      named_run_list: everything
+      product_version: 15
+    attributes:
+      chef-server:
+        package_source: /backups/chef-server-core-12.19.31-1.el7.x86_64.rpm
+      mcs:
+        upgrade:
+          package_source: /backups/chef-server-core-13.2.0-1.el7.x86_64.rpm
+    verifier:
+      inspec_tests:
+        - test/integration/default
+        - test/integration/data_collector
+        - test/integration/backup
+        - test/integration/data_bags
+        - test/integration/legacy
+        - test/integration/policyfiles
+        - test/integration/upgrade
+    excludes: ["ubuntu-18.04"]
+  - name: 16everything
+    provisioner:
+      named_run_list: everything
+    attributes:
+      chef-server:
+        package_source: /backups/chef-server-core-13.1.13-1.el7.x86_64.rpm
+      mcs:
+        upgrade:
+          package_source: /backups/chef-server-core-13.2.0-1.el7.x86_64.rpm
+    verifier:
+      inspec_tests:
+        - test/integration/default
+        - test/integration/data_collector
+        - test/integration/backup
+        - test/integration/data_bags
+        - test/integration/legacy
+        - test/integration/policyfiles
+        - test/integration/upgrade
+    excludes: ["ubuntu-18.04"]
